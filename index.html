@@ -141,7 +141,7 @@
     <!-- Lógica do Sistema em JavaScript -->
     <script>
         // Estado inicial
-        let companies = [
+        const defaultCompanies = [
             { id: 1, name: "Brother's Burguer", stars: 15 },
             { id: 2, name: "Torres Pizza", stars: 15 },
             { id: 3, name: "Ulin Lanches", stars: 15 },
@@ -150,6 +150,13 @@
             { id: 6, name: "Seu Bibi Pastelaria", stars: 15 },
             { id: 7, name: "Imperial Pizza", stars: 15 },
         ];
+
+        let companies = JSON.parse(localStorage.getItem('ranking_companies')) || defaultCompanies;
+
+        // Função para salvar no LocalStorage
+        function saveCompanies() {
+            localStorage.setItem('ranking_companies', JSON.stringify(companies));
+        }
 
         let editingId = null;
 
@@ -302,11 +309,13 @@
                 stars: 0 // Começa com 0 estrelas
             };
             companies.push(newCompany);
+            saveCompanies();
             render();
         }
 
         function deleteCompany(id) {
             companies = companies.filter(c => c.id !== id);
+            saveCompanies();
             render();
         }
 
@@ -319,6 +328,7 @@
             const company = companies.find(c => c.id === id);
             if (company && newName.trim()) {
                 company.name = newName.trim();
+                saveCompanies();
             }
             editingId = null;
             render();
@@ -333,6 +343,7 @@
                 if (newStars > 20) newStars = 20;
                 
                 company.stars = newStars;
+                saveCompanies();
                 render();
             }
         }

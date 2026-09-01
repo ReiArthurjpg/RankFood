@@ -200,37 +200,78 @@
             window.formkitAutoAnimate(companyListEl, { duration: 300, easing: 'ease-out' });
         }
 
-        // Estado inicial
-        const defaultCompanies = [
-            { id: 1, name: "Brother's Burguer", stars: 15 },
-            { id: 2, name: "Torres Pizza", stars: 15 },
-            { id: 3, name: "Ulin Lanches", stars: 15 },
-            { id: 4, name: "D'Cakes", stars: 15 },
-            { id: 5, name: "Divorari", stars: 15 },
-            { id: 6, name: "Seu Bibi Pastelaria", stars: 15 },
-            { id: 7, name: "Imperial Pizza", stars: 15 },
-        ];
-
-        let companies = JSON.parse(localStorage.getItem('ranking_companies')) || defaultCompanies;
+        // Estado
+        let companies = [];
         let editingId = null;
-
-        function saveCompanies() {
-            localStorage.setItem('ranking_companies', JSON.stringify(companies));
-        }
+        
+        const apiUrl = 'api.php';
 
         const addFormEl = document.getElementById('add-form');
         const newCompanyNameEl = document.getElementById('new-company-name');
+        
+        // --- Comunicação com a API ---
+        async function fetchCompanies() {
+            try {
+                const res = await fetch(apiUrl);
+                companies = await res.json();
+                render();
+            } catch (err) {
+                console.error('Erro ao buscar empresas:', err);
+            }
+        }
+
+        async function apiAddCompany(name) {
+            try {
+                await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, stars: 0 })
+                });
+                await fetchCompanies(); // Recarrega lista
+            } catch (err) {
+                console.error('Erro ao adicionar empresa:', err);
+            }
+        }
+
+        async function apiUpdateCompany(id, updates) {
+            try {
+                await fetch(apiUrl, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, ...updates })
+                });
+                await fetchCompanies();
+            } catch (err) {
+                console.error('Erro ao atualizar empresa:', err);
+            }
+        }
+
+        async function apiDeleteCompany(id) {
+            try {
+                await fetch(apiUrl, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+                await fetchCompanies();
+            } catch (err) {
+                console.error('Erro ao deletar empresa:', err);
+            }
+        }
 
         function sortCompanies() {
             companies.sort((a, b) => {
-                if (b.stars !== a.stars) {
-                    return b.stars - a.stars; // Decrescente por estrelas
+                const aStars = parseInt(a.stars);
+                const bStars = parseInt(b.stars);
+                if (bStars !== aStars) {
+                    return bStars - aStars; // Decrescente por estrelas
                 }
                 return a.name.localeCompare(b.name); // Alfabética para desempate
             });
         }
 
         function renderStars(count) {
+            count = parseInt(count);
             let starsHtml = '';
             for (let i = 0; i < 20; i++) {
                 if (i < count) {
@@ -266,8 +307,9 @@
             }
 
             companies.forEach((company, index) => {
-                const isEditing = editingId === company.id;
+                const isEditing = editingId === parseInt(company.id);
                 const podiumClass = getPodiumClasses(index);
+                const starsCount = parseInt(company.stars);
                 
                 const row = document.createElement('div');
                 row.className = `flex items-stretch border-b border-gray-100 hover:bg-white hover:shadow-md transition-all group bg-white/30 duration-200`;
@@ -310,7 +352,7 @@
                     <!-- Estrelas (Crédito) -->
                     <div class="flex-1 py-3 px-2 md:px-4 flex items-center justify-between border-l border-white/50">
                         <div class="flex items-center gap-[2px] flex-wrap">
-                            ${renderStars(company.stars)}
+                            ${renderStars(starsCount)}
                         </div>
                         
                         <!-- Controles de Estrela -->
@@ -319,16 +361,16 @@
                                 data-action="minus" data-id="${company.id}"
                                 class="w-7 h-7 rounded text-red-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
                                 title="Remover Estrela"
-                                ${company.stars <= 0 ? 'disabled' : ''}
+                                ${starsCount <= 0 ? 'disabled' : ''}
                             >
                                 <i class="fa-solid fa-minus text-xs"></i>
                             </button>
-                            <span class="text-xs font-bold w-5 text-center text-gray-700">${company.stars}</span>
+                            <span class="text-xs font-bold w-5 text-center text-gray-700">${starsCount}</span>
                             <button 
                                 data-action="plus" data-id="${company.id}"
                                 class="w-7 h-7 rounded text-green-500 hover:bg-green-50 hover:text-green-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
                                 title="Adicionar Estrela"
-                                ${company.stars >= 20 ? 'disabled' : ''}
+                                ${starsCount >= 20 ? 'disabled' : ''}
                             >
                                 <i class="fa-solid fa-plus text-xs"></i>
                             </button>
@@ -366,50 +408,42 @@
             });
         }
 
-        // --- Ações ---
+        // --- Ações Locais que Chamam API ---
         function addCompany(name) {
             if (!name.trim()) return;
-            const newCompany = {
-                id: Date.now(),
-                name: name.trim(),
-                stars: 0
-            };
-            companies.push(newCompany);
-            saveCompanies();
-            render();
+            apiAddCompany(name.trim());
         }
 
         function deleteCompany(id) {
-            companies = companies.filter(c => c.id !== id);
-            saveCompanies();
-            render();
+            apiDeleteCompany(id);
         }
 
         function startEditing(id) {
-            editingId = id;
+            editingId = parseInt(id);
             render();
         }
 
         function saveEdit(id, newName) {
-            const company = companies.find(c => c.id === id);
-            if (company && newName.trim()) {
-                company.name = newName.trim();
-                saveCompanies();
+            if (newName.trim()) {
+                apiUpdateCompany(id, { name: newName.trim() });
             }
             editingId = null;
-            render();
+            render(); // render imediato para remover o modo de edição visualmente
         }
 
         function updateStars(id, change) {
-            const company = companies.find(c => c.id === id);
+            const company = companies.find(c => parseInt(c.id) === parseInt(id));
             if (company) {
-                let newStars = company.stars + change;
+                let newStars = parseInt(company.stars) + change;
                 if (newStars < 0) newStars = 0;
                 if (newStars > 20) newStars = 20;
                 
+                // Otimista
                 company.stars = newStars;
-                saveCompanies();
                 render();
+                
+                // Persiste
+                apiUpdateCompany(id, { stars: newStars });
             }
         }
 
@@ -437,8 +471,8 @@
             }
         });
 
-        // Inicializa
-        render();
+        // Inicializa buscando as empresas do banco
+        fetchCompanies();
 
     </script>
 </body>

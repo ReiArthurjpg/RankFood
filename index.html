@@ -74,7 +74,42 @@
         }
     </style>
 </head>
-<body class="min-h-screen p-4 md:p-8 font-sans flex justify-center text-gray-800 items-start">
+<body class="min-h-screen p-4 md:p-8 font-sans flex justify-center text-gray-800 items-start relative">
+
+    <!-- Modal de Senha -->
+    <div id="auth-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl transform transition-all">
+            <div class="text-center mb-6">
+                <div class="bg-brand-blue w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-brand-gold shadow-lg">
+                    <i class="fa-solid fa-lock text-brand-gold text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-black text-brand-blue tracking-wide">Acesso Restrito</h2>
+                <p class="text-gray-500 text-sm mt-1">Insira a senha para acessar o painel</p>
+            </div>
+            
+            <form id="auth-form" class="space-y-4">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i class="fa-solid fa-key text-gray-400"></i>
+                    </div>
+                    <input 
+                        type="password" 
+                        id="auth-password" 
+                        placeholder="Senha" 
+                        class="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl bg-gray-50 shadow-inner focus:outline-none focus:ring-2 focus:ring-brand-gold focus:bg-white transition-all text-sm font-medium"
+                        required
+                    />
+                </div>
+                <p id="auth-error" class="text-red-500 text-xs font-bold text-center hidden">Senha incorreta!</p>
+                <button 
+                    type="submit" 
+                    class="w-full py-3 bg-brand-blue text-white font-bold rounded-xl shadow-md hover:bg-brand-lightBlue hover:-translate-y-0.5 active:translate-y-0 transition-all focus:outline-none focus:ring-2 focus:ring-brand-gold"
+                >
+                    Entrar
+                </button>
+            </form>
+        </div>
+    </div>
 
     <div class="max-w-4xl w-full glass-panel rounded-3xl overflow-hidden flex flex-col border border-white/50 shadow-2xl">
         
@@ -612,8 +647,37 @@
             }
         });
 
-        // Inicializa buscando as empresas do banco
-        fetchCompanies();
+        // --- Autenticação ---
+        const authModal = document.getElementById('auth-modal');
+        const authForm = document.getElementById('auth-form');
+        const authPassword = document.getElementById('auth-password');
+        const authError = document.getElementById('auth-error');
+        
+        function checkAuth() {
+            if (sessionStorage.getItem('rank_auth') === 'true') {
+                authModal.style.display = 'none';
+                fetchCompanies();
+            } else {
+                authModal.style.display = 'flex';
+                authPassword.focus();
+            }
+        }
+        
+        authForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (authPassword.value === 'Beterraba123') {
+                sessionStorage.setItem('rank_auth', 'true');
+                authModal.style.display = 'none';
+                fetchCompanies();
+            } else {
+                authError.classList.remove('hidden');
+                authPassword.value = '';
+                authPassword.focus();
+            }
+        });
+
+        // Inicializa checando a autenticação
+        checkAuth();
 
     </script>
 </body>

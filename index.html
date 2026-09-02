@@ -37,6 +37,10 @@
     
     <!-- AutoAnimate -->
     <script src="https://cdn.jsdelivr.net/npm/@formkit/auto-animate@0.8.1/index.global.js"></script>
+    
+    <!-- html2pdf for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 
     <style>
         ::-webkit-scrollbar {
@@ -113,28 +117,39 @@
             </div>
         </div>
 
-        <!-- Controles: Adicionar Empresa -->
+        <!-- Controles: Adicionar Empresa e Exportar -->
         <div class="p-5 bg-gray-50/80 border-b border-gray-200">
-            <form id="add-form" class="flex gap-3 max-w-2xl mx-auto">
-                <div class="relative flex-1">
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <i class="fa-solid fa-building text-gray-400"></i>
+            <div class="flex flex-col md:flex-row gap-4 max-w-4xl mx-auto items-center">
+                <form id="add-form" class="flex gap-3 flex-1 w-full">
+                    <div class="relative flex-1">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-building text-gray-400"></i>
+                        </div>
+                        <input
+                            type="text"
+                            id="new-company-name"
+                            placeholder="Nome da nova empresa..."
+                            class="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-gold focus:border-transparent transition-all text-sm font-medium"
+                        />
                     </div>
-                    <input
-                        type="text"
-                        id="new-company-name"
-                        placeholder="Nome da nova empresa..."
-                        class="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-gold focus:border-transparent transition-all text-sm font-medium"
-                    />
-                </div>
+                    <button
+                        type="submit"
+                        class="px-6 py-3 bg-brand-blue text-white font-bold rounded-xl shadow-md hover:bg-brand-lightBlue hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-brand-gold transition-all flex items-center gap-2"
+                    >
+                        <i class="fa-solid fa-plus"></i>
+                        Adicionar
+                    </button>
+                </form>
+                
                 <button
-                    type="submit"
-                    class="px-6 py-3 bg-brand-blue text-white font-bold rounded-xl shadow-md hover:bg-brand-lightBlue hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-brand-gold transition-all flex items-center gap-2"
+                    type="button"
+                    onclick="exportPDF()"
+                    class="px-6 py-3 bg-brand-gold text-white font-bold rounded-xl shadow-md hover:bg-yellow-500 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-brand-blue transition-all flex items-center gap-2 w-full md:w-auto justify-center"
                 >
-                    <i class="fa-solid fa-plus"></i>
-                    Adicionar
+                    <i class="fa-solid fa-file-pdf"></i>
+                    Exportar PDF
                 </button>
-            </form>
+            </div>
         </div>
 
         <!-- Cabeçalho da Tabela -->
@@ -184,6 +199,89 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- Template para Exportação de PDF (Escondido) -->
+    <div id="pdf-export-container" style="position: absolute; left: -9999px; top: 0; width: 800px; font-family: 'Outfit', sans-serif;">
+        <div id="pdf-content" class="w-full flex flex-col bg-[#e6e9ee] relative overflow-hidden" style="min-height: 1122px;"> <!-- Aproximadamente A4 -->
+            <!-- Header do PDF -->
+            <div class="relative bg-gradient-to-r from-brand-blue to-brand-lightBlue text-white pt-12 pb-16 px-10 flex justify-between items-start z-10 shadow-lg">
+                <div class="z-20 relative">
+                    <h1 class="text-4xl font-black italic tracking-widest leading-none">RANKING DE</h1>
+                    <h1 class="text-4xl font-black italic tracking-widest text-brand-gold mt-1 drop-shadow-md">PARTICIPAÇÃO</h1>
+                </div>
+                <div class="text-right flex flex-col items-end z-20 relative">
+                    <span class="font-black text-3xl tracking-widest border-t-[3px] border-b-[3px] border-white py-1 block">SEBRAE</span>
+                </div>
+            </div>
+            
+            <!-- Detalhe Curvo Dourado/Branco -->
+            <div class="relative w-full h-12 -mt-6 z-20">
+                <div class="absolute top-0 left-0 w-full h-12 bg-brand-gold rounded-t-[100%] rounded-b-none shadow-md"></div>
+                <div class="absolute top-2 left-0 w-full h-12 bg-white rounded-t-[100%] rounded-b-none shadow-sm"></div>
+            </div>
+
+            <!-- Logos -->
+            <div class="flex justify-center items-center gap-12 pt-4 pb-8 bg-white z-20 relative px-10">
+                <img src="img/logo-crescer.png" class="h-20 object-contain" />
+                <img src="img/logo-proativa.png" class="h-24 object-contain" />
+                <img src="img/logo-torres.png" class="h-24 object-contain" />
+            </div>
+
+            <!-- Tabela -->
+            <div class="px-8 pb-10 flex-1 z-20 relative mt-4">
+                <div class="w-full bg-white shadow-sm overflow-hidden">
+                    <div class="flex text-white font-bold text-lg text-center uppercase tracking-wider">
+                        <div class="w-16 bg-[#1a365d] py-3 border-r border-white/20">Nº</div>
+                        <div class="w-72 bg-[#1a365d] py-3 border-r border-white/20">Empresa</div>
+                        <div class="flex-1 bg-[#cc9900] py-3 text-white">Crédito</div>
+                    </div>
+                    <div id="pdf-table-body" class="flex flex-col bg-[#f5f7f9]">
+                        <!-- Linhas renderizadas via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="relative mt-auto w-full">
+                <!-- Detalhe Curvo Invertido -->
+                <div class="relative w-full h-12 z-20">
+                    <div class="absolute bottom-2 left-0 w-full h-12 bg-brand-gold rounded-b-[100%] rounded-t-none shadow-md"></div>
+                    <div class="absolute bottom-0 left-0 w-full h-12 bg-brand-blue rounded-b-[100%] rounded-t-none z-10"></div>
+                </div>
+                
+                <div class="bg-brand-blue text-white pt-10 pb-8 px-10 z-30 relative">
+                    <div class="flex flex-col items-center justify-center -mt-16">
+                        <div class="bg-brand-blue rounded-full p-3 border-2 border-brand-gold shadow-lg inline-block">
+                            <i class="fa-solid fa-users text-white text-3xl w-10 h-10 flex items-center justify-center"></i>
+                        </div>
+                        <h3 class="text-brand-gold font-bold text-sm uppercase mt-3 tracking-widest">Clube de líderes</h3>
+                        <h4 class="text-3xl font-black text-white tracking-wide">Sebrae profood</h4>
+                    </div>
+                    
+                    <div class="mt-8 pt-4 border-t border-white/20 flex justify-between px-4 text-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-white/10 p-2 rounded-lg">
+                                <i class="fa-solid fa-users text-white text-xl"></i>
+                            </div>
+                            <div>
+                                <span class="font-black text-[10px] tracking-wider block">CONSULTORES:</span>
+                                <span class="font-medium text-xs">Marluce, Thiago e Gabriel</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="bg-white/10 p-2 rounded-lg">
+                                <i class="fa-solid fa-user-tie text-white text-xl"></i>
+                            </div>
+                            <div>
+                                <span class="font-black text-[10px] tracking-wider block">GESTORA:</span>
+                                <span class="font-medium text-xs">Kamila</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Lógica do Sistema em JavaScript -->
@@ -250,6 +348,60 @@
                 await fetchCompanies();
             } catch (err) {
                 console.error('Erro ao deletar empresa:', err);
+            }
+        }
+
+        // --- Geração de PDF ---
+        async function exportPDF() {
+            const btn = document.querySelector('button[onclick="exportPDF()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Gerando...';
+            btn.disabled = true;
+
+            try {
+                // Preenche a tabela do PDF
+                const tbody = document.getElementById('pdf-table-body');
+                tbody.innerHTML = '';
+                
+                companies.forEach((company, index) => {
+                    const row = document.createElement('div');
+                    row.className = 'flex items-center border-b border-gray-200/50 py-1.5';
+                    if(index % 2 !== 0) row.classList.add('bg-[#eaedf1]'); // Efeito zebrado sutil
+                    
+                    let starsHtml = '';
+                    for(let i=0; i<15; i++) {
+                        if(i < company.stars) {
+                            starsHtml += '<i class="fa-solid fa-star text-[#1b5e20] mx-0.5 text-sm drop-shadow-sm"></i>';
+                        }
+                    }
+
+                    row.innerHTML = `
+                        <div class="w-16 text-center font-black text-[#1a365d] text-base">${index + 1}</div>
+                        <div class="w-72 text-[#1a365d] font-bold px-4 text-base truncate">${company.name}</div>
+                        <div class="flex-1 flex px-4 items-center">
+                            ${starsHtml}
+                        </div>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                // Gera o PDF
+                const element = document.getElementById('pdf-content');
+                const opt = {
+                    margin:       0,
+                    filename:     'Ranking-Participacao-Sebrae.pdf',
+                    image:        { type: 'jpeg', quality: 1.0 },
+                    html2canvas:  { scale: 2, useCORS: true, logging: false },
+                    jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+                };
+
+                await html2pdf().set(opt).from(element).save();
+            } catch(e) {
+                console.error("Erro ao gerar PDF:", e);
+                alert("Erro ao gerar PDF.");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         }
 

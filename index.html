@@ -273,7 +273,7 @@
         function renderStars(count) {
             count = parseInt(count);
             let starsHtml = '';
-            for (let i = 0; i < 20; i++) {
+            for (let i = 0; i < 15; i++) {
                 if (i < count) {
                     starsHtml += `<i class="fa-solid fa-star text-brand-lightGold star-glow text-[10px] md:text-sm"></i>`;
                 } else {
@@ -370,7 +370,7 @@
                                 data-action="plus" data-id="${company.id}"
                                 class="w-7 h-7 rounded text-green-500 hover:bg-green-50 hover:text-green-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
                                 title="Adicionar Estrela"
-                                ${starsCount >= 20 ? 'disabled' : ''}
+                                ${starsCount >= 15 ? 'disabled' : ''}
                             >
                                 <i class="fa-solid fa-plus text-xs"></i>
                             </button>
@@ -436,7 +436,7 @@
             if (company) {
                 let newStars = parseInt(company.stars) + change;
                 if (newStars < 0) newStars = 0;
-                if (newStars > 20) newStars = 20;
+                if (newStars > 15) newStars = 15;
                 
                 // Otimista
                 company.stars = newStars;

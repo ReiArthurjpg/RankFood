@@ -261,12 +261,7 @@
 
         function sortCompanies() {
             companies.sort((a, b) => {
-                const aStars = parseInt(a.stars);
-                const bStars = parseInt(b.stars);
-                if (bStars !== aStars) {
-                    return bStars - aStars; // Decrescente por estrelas
-                }
-                return a.name.localeCompare(b.name); // Alfabética para desempate
+                return a.name.localeCompare(b.name); // Alfabética fixa
             });
         }
 
